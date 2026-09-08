@@ -54,7 +54,10 @@ public:
   static llvm::StringRef GetPluginNameStatic() { return "v810"; }
   llvm::StringRef GetPluginName() override { return GetPluginNameStatic(); }
 private:
-  using lldb_private::RegInfoBasedABI::RegInfoBasedABI;
+  ABIV810(lldb::ProcessSP process_sp, const lldb_private::ArchSpec &arch,
+          bool is_v830);
+
+  bool m_is_v830;
 };
 
 #endif
