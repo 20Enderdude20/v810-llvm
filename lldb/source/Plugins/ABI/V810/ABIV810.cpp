@@ -220,7 +220,6 @@ ABIV810::CreateDefaultUnwindPlan() {
 
   UnwindPlan::Row row;
 
-  row.SetUnspecifiedRegistersAreUndefined(true);
   row.GetCFAValue().SetIsRegisterDereferenced(dwarf_r2);
   row.SetRegisterLocationToAtCFAPlusOffset(dwarf_r31, 0, true);
 
