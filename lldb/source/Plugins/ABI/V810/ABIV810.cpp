@@ -214,14 +214,11 @@ ABIV810::CreateFunctionEntryUnwindPlan() {
 
 UnwindPlanSP
 ABIV810::CreateDefaultUnwindPlan() {
-  if (m_is_v830) {
-    return nullptr;
-  }
-
   UnwindPlan::Row row;
 
   row.GetCFAValue().SetIsRegisterDereferenced(dwarf_r2);
   row.SetRegisterLocationToAtCFAPlusOffset(dwarf_r31, 0, true);
+  row.SetUnspecifiedRegistersAreUndefined(true);
 
   auto plan_sp = std::make_shared<UnwindPlan>(eRegisterKindDWARF);
   plan_sp->AppendRow(row);
