@@ -10,7 +10,7 @@ using namespace lldb_private;
 
 LLDB_PLUGIN_DEFINE(ABIV810)
 
-enum dwarf_regnums {
+enum dwarf_gp_regnums {
   dwarf_r0 = 0,
   dwarf_r1,
   dwarf_r2,
@@ -43,7 +43,11 @@ enum dwarf_regnums {
   dwarf_r29,
   dwarf_r30,
   dwarf_r31,
-  dwarf_sr0,
+};
+
+
+enum dwarf_sregnums_v810 {
+  dwarf_sr0 = 32,
   dwarf_sr1,
   dwarf_sr2,
   dwarf_sr3,
@@ -59,7 +63,15 @@ enum dwarf_regnums {
   dwarf_pc
 };
 
-static const RegisterInfo g_register_infos[] = {
+
+enum dwarf_sregnums_v830 {
+  dwarf_sr16 = 40,
+  dwarf_sr17,
+  dwarf_sr31_v830,
+  dwarf_pc_v830
+};
+
+static const RegisterInfo g_register_infos_v810[] = {
   {"r0", nullptr, 4, 0, eEncodingUint, eFormatHex, {dwarf_r0, dwarf_r0, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
   {"r1", nullptr, 4, 4, eEncodingUint, eFormatHex, {dwarf_r1, dwarf_r1, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
   {"fp", "r2", 4, 8, eEncodingUint, eFormatHex, {dwarf_r2, dwarf_r2, LLDB_REGNUM_GENERIC_FP, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
@@ -108,12 +120,67 @@ static const RegisterInfo g_register_infos[] = {
   {"pc", nullptr, 4, 180, eEncodingUint, eFormatHex, {dwarf_pc, dwarf_pc, LLDB_REGNUM_GENERIC_PC, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
 };
 
-static const uint32_t k_num_register_infos = std::size(g_register_infos);
+
+static const RegisterInfo g_register_infos_v830[] = {
+  {"r0", nullptr, 4, 0, eEncodingUint, eFormatHex, {dwarf_r0, dwarf_r0, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r1", nullptr, 4, 4, eEncodingUint, eFormatHex, {dwarf_r1, dwarf_r1, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"fp", "r2", 4, 8, eEncodingUint, eFormatHex, {dwarf_r2, dwarf_r2, LLDB_REGNUM_GENERIC_FP, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"sp", "r3", 4, 12, eEncodingUint, eFormatHex, {dwarf_r3, dwarf_r3, LLDB_REGNUM_GENERIC_SP, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"gp", "r4", 4, 16, eEncodingUint, eFormatHex, {dwarf_r4, dwarf_r4, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"tp", "r5", 4, 20, eEncodingUint, eFormatHex, {dwarf_r5, dwarf_r5, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r6", nullptr, 4, 24, eEncodingUint, eFormatHex, {dwarf_r6, dwarf_r6, LLDB_REGNUM_GENERIC_ARG1, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r7", nullptr, 4, 28, eEncodingUint, eFormatHex, {dwarf_r7, dwarf_r7, LLDB_REGNUM_GENERIC_ARG2, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r8", nullptr, 4, 32, eEncodingUint, eFormatHex, {dwarf_r8, dwarf_r8, LLDB_REGNUM_GENERIC_ARG3, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r9", nullptr, 4, 36, eEncodingUint, eFormatHex, {dwarf_r9, dwarf_r9, LLDB_REGNUM_GENERIC_ARG4, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r10", nullptr, 4, 40, eEncodingUint, eFormatHex, {dwarf_r10, dwarf_r10, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r11", nullptr, 4, 44, eEncodingUint, eFormatHex, {dwarf_r11, dwarf_r11, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r12", nullptr, 4, 48, eEncodingUint, eFormatHex, {dwarf_r12, dwarf_r12, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r13", nullptr, 4, 52, eEncodingUint, eFormatHex, {dwarf_r13, dwarf_r13, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r14", nullptr, 4, 56, eEncodingUint, eFormatHex, {dwarf_r14, dwarf_r14, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r15", nullptr, 4, 60, eEncodingUint, eFormatHex, {dwarf_r15, dwarf_r15, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r16", nullptr, 4, 64, eEncodingUint, eFormatHex, {dwarf_r16, dwarf_r16, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r17", nullptr, 4, 68, eEncodingUint, eFormatHex, {dwarf_r17, dwarf_r17, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r18", nullptr, 4, 72, eEncodingUint, eFormatHex, {dwarf_r18, dwarf_r18, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r19", nullptr, 4, 76, eEncodingUint, eFormatHex, {dwarf_r19, dwarf_r19, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r20", nullptr, 4, 80, eEncodingUint, eFormatHex, {dwarf_r20, dwarf_r20, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r21", nullptr, 4, 84, eEncodingUint, eFormatHex, {dwarf_r21, dwarf_r21, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r22", nullptr, 4, 88, eEncodingUint, eFormatHex, {dwarf_r22, dwarf_r22, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r23", nullptr, 4, 92, eEncodingUint, eFormatHex, {dwarf_r23, dwarf_r23, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r24", nullptr, 4, 96, eEncodingUint, eFormatHex, {dwarf_r24, dwarf_r24, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r25", nullptr, 4, 100, eEncodingUint, eFormatHex, {dwarf_r25, dwarf_r25, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r26", nullptr, 4, 104, eEncodingUint, eFormatHex, {dwarf_r26, dwarf_r26, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r27", nullptr, 4, 108, eEncodingUint, eFormatHex, {dwarf_r27, dwarf_r27, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r28", nullptr, 4, 112, eEncodingUint, eFormatHex, {dwarf_r28, dwarf_r28, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r29", nullptr, 4, 116, eEncodingUint, eFormatHex, {dwarf_r29, dwarf_r29, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"r30", nullptr, 4, 120, eEncodingUint, eFormatHex, {dwarf_r30, dwarf_r30, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"lp", "r31", 4, 124, eEncodingUint, eFormatHex, {dwarf_r31, dwarf_r31, LLDB_REGNUM_GENERIC_RA, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"eipc", "sr0", 4, 128, eEncodingUint, eFormatHex, {dwarf_sr0, dwarf_sr0, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"eipsw", "sr1", 4, 132, eEncodingUint, eFormatHex, {dwarf_sr1, dwarf_sr1, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"fepc", "sr2", 4, 136, eEncodingUint, eFormatHex, {dwarf_sr2, dwarf_sr2, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"fepsw", "sr3", 4, 140, eEncodingUint, eFormatHex, {dwarf_sr3, dwarf_sr3, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"ecr", "sr4", 4, 144, eEncodingUint, eFormatHex, {dwarf_sr4, dwarf_sr4, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"psw", "sr5", 4, 148, eEncodingUint, eFormatHex, {dwarf_sr5, dwarf_sr5, LLDB_REGNUM_GENERIC_FLAGS, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"pir", "sr6", 4, 152, eEncodingUint, eFormatHex, {dwarf_sr6, dwarf_sr6, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"tkcw", "sr7", 4, 156, eEncodingUint, eFormatHex, {dwarf_sr7, dwarf_sr7, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"dpc", "sr16", 4, 160, eEncodingUint, eFormatHex, {dwarf_sr16, dwarf_sr16, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"dpsw", "sr17", 4, 164, eEncodingUint, eFormatHex, {dwarf_sr17, dwarf_sr17, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"hccw", "sr31", 4, 168, eEncodingUint, eFormatHex, {dwarf_sr31_v830, dwarf_sr31_v830, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+  {"pc", nullptr, 4, 172, eEncodingUint, eFormatHex, {dwarf_pc_v830, dwarf_pc_v830, LLDB_REGNUM_GENERIC_PC, LLDB_INVALID_REGNUM}, nullptr, nullptr, nullptr},
+};
+
+
+static const uint32_t k_num_register_infos_v810 = std::size(g_register_infos_v810);
+static const uint32_t k_num_register_infos_v830 = std::size(g_register_infos_v830);
+
+ABIV810::ABIV810(lldb::ProcessSP process_sp, const ArchSpec &arch,
+                 bool is_v830)
+    : RegInfoBasedABI(std::move(process_sp), MakeMCRegisterInfo(arch)),
+      m_is_v830(is_v830) {}
 
 const lldb_private::RegisterInfo *
 ABIV810::GetRegisterInfoArray(uint32_t &count) {
-  count = k_num_register_infos;
-  return g_register_infos;
+  count = m_is_v830 ? k_num_register_infos_v830 : k_num_register_infos_v810;
+  return m_is_v830 ? g_register_infos_v830 : g_register_infos_v810;
 }
 
 bool ABIV810::PrepareTrivialCall(lldb_private::Thread &thread, lldb::addr_t sp,
@@ -151,6 +218,7 @@ ABIV810::CreateDefaultUnwindPlan() {
 
   row.GetCFAValue().SetIsRegisterDereferenced(dwarf_r2);
   row.SetRegisterLocationToAtCFAPlusOffset(dwarf_r31, 0, true);
+  row.SetUnspecifiedRegistersAreUndefined(true);
 
   auto plan_sp = std::make_shared<UnwindPlan>(eRegisterKindDWARF);
   plan_sp->AppendRow(row);
@@ -164,9 +232,10 @@ ABIV810::CreateDefaultUnwindPlan() {
 ABISP
 ABIV810::CreateInstance(lldb::ProcessSP process_sp, const ArchSpec &arch) {
   const llvm::Triple::ArchType arch_type = arch.GetTriple().getArch();
-  if (arch_type == llvm::Triple::v810) {
-    return ABISP(new ABIV810(std::move(process_sp), MakeMCRegisterInfo(arch)));
-  }
+if (arch_type == llvm::Triple::v810 || arch_type == llvm::Triple::v830) {
+  return ABISP(new ABIV810(std::move(process_sp), arch,
+                           arch_type == llvm::Triple::v830));
+}
   return ABISP();
 }
 
