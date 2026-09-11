@@ -1,4 +1,7 @@
+#include "V810.h"
 #include "V810MCAsmInfo.h"
+#include "V810MCExpr.h"
+#include "llvm/MC/MCExpr.h"
 
 using namespace llvm;
 
@@ -13,4 +16,12 @@ V810AsmInfo::V810AsmInfo(const Triple &TheTriple,
   IsLittleEndian = true;
   SupportsDebugInformation = true;
   UsesCFIWithoutEH = true;
+}
+
+void V810AsmInfo::printSpecifierExpr(raw_ostream &OS, const MCSpecifierExpr &S) const {
+  bool parens = V810MCExpr::printSpecifier(OS, S.getSpecifier());
+
+  if (parens) OS << '(';
+  printExpr(OS, *S.getSubExpr());
+  if (parens) OS << ')';
 }

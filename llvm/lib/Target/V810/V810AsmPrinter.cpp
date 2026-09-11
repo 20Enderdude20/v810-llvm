@@ -84,9 +84,9 @@ bool V810AsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNo
 void V810AsmPrinter::printOperandImpl(const MachineInstr *MI, unsigned OpNo,
                          raw_ostream &O) {
   const MachineOperand &MO = MI->getOperand(OpNo);
-  V810MCExpr::VariantKind TF = (V810MCExpr::VariantKind) MO.getTargetFlags();
+  V810MCExpr::Specifier TF = (V810MCExpr::Specifier) MO.getTargetFlags();
 
-  bool Parens = V810MCExpr::printVariantKind(O, TF);
+  bool Parens = V810MCExpr::printSpecifier(O, TF);
   if (Parens) O << '(';
   switch (MO.getType()) {
   case MachineOperand::MO_Register:

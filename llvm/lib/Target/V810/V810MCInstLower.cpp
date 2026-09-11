@@ -11,8 +11,8 @@ static MCOperand LowerSymbolOperand(const MachineOperand &MO,
                                     const MCSymbol *Symbol,
                                     const int64_t Offset,
                                     AsmPrinter &AP) {
-  V810MCExpr::VariantKind Kind =
-    (V810MCExpr::VariantKind)MO.getTargetFlags();
+  V810MCExpr::Specifier Spec =
+    (V810MCExpr::Specifier)MO.getTargetFlags();
 
   const MCExpr *InnerExpr = MCSymbolRefExpr::create(Symbol,
                                                     AP.OutContext);
@@ -22,7 +22,7 @@ static MCOperand LowerSymbolOperand(const MachineOperand &MO,
                                      OffsetExpr, AP.OutContext);
   }
 
-  const V810MCExpr *expr = V810MCExpr::create(Kind, InnerExpr,
+  const V810MCExpr *expr = V810MCExpr::create(Spec, InnerExpr,
                                               AP.OutContext);
   return MCOperand::createExpr(expr);
 }
