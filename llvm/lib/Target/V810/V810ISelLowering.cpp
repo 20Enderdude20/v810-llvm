@@ -2,6 +2,7 @@
 #include "V810.h"
 #include "V810MachineFunctionInfo.h"
 #include "MCTargetDesc/V810MCExpr.h"
+#include "MCTargetDesc/V810MCAsmInfo.h"
 #include "V810RegisterInfo.h"
 #include "V810Subtarget.h"
 #include "V810TargetObjectFile.h"
@@ -447,9 +448,9 @@ V810TargetLowering::LowerCall(CallLoweringInfo &CLI,
   // convert this into a target type now, so that legalization doesn't mess it up
   SDValue Callee = CLI.Callee;
   if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee))
-    Callee = DAG.getTargetGlobalAddress(G->getGlobal(), DL, PtrVT, 0, V810MCExpr::VK_V810_26_PCREL);
+    Callee = DAG.getTargetGlobalAddress(G->getGlobal(), DL, PtrVT, 0, V810::S_V810_26_PCREL);
   else if (ExternalSymbolSDNode *E = dyn_cast<ExternalSymbolSDNode>(Callee))
-    Callee = DAG.getTargetExternalSymbol(E->getSymbol(), PtrVT, V810MCExpr::VK_V810_26_PCREL);
+    Callee = DAG.getTargetExternalSymbol(E->getSymbol(), PtrVT, V810::S_V810_26_PCREL);
 
   // Now build the ops for the call
   SmallVector<SDValue, 8> Ops;
@@ -598,8 +599,8 @@ bool V810TargetLowering::IsGPRelative(const GlobalValue *GVal) const {
 }
 
 static SDValue BuildMovhiMoveaPair(SelectionDAG &DAG, const GlobalValue *GV, SDLoc DL, EVT VT, int64_t Offset) {
-  SDValue HiTarget = DAG.getTargetGlobalAddress(GV, DL, VT, Offset, V810MCExpr::VK_V810_HI);
-  SDValue LoTarget = DAG.getTargetGlobalAddress(GV, DL, VT, Offset, V810MCExpr::VK_V810_LO);
+  SDValue HiTarget = DAG.getTargetGlobalAddress(GV, DL, VT, Offset, V810::S_V810_HI);
+  SDValue LoTarget = DAG.getTargetGlobalAddress(GV, DL, VT, Offset, V810::S_V810_LO);
 
   SDValue Hi = DAG.getNode(V810ISD::HI, DL, VT, HiTarget);
   return DAG.getNode(V810ISD::LO, DL, VT, Hi, LoTarget);
@@ -615,7 +616,7 @@ static SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG, const V810Targe
   if (TLI->IsGPRelative(GV)) {
     // The address of every global variable in the "small data" area 
     // can be expressed by a 16-bit signed offset from the GP register (R4).
-    SDValue RelTarget = DAG.getTargetGlobalAddress(GV, DL, GN->getValueType(0), GN->getOffset(), V810MCExpr::VK_V810_SDAOFF);
+    SDValue RelTarget = DAG.getTargetGlobalAddress(GV, DL, GN->getValueType(0), GN->getOffset(), V810::S_V810_SDAOFF);
     SDValue Reg = DAG.getRegister(V810::R4, GN->getValueType(0));
     return DAG.getNode(V810ISD::REG_RELATIVE, DL, VT, RelTarget, Reg);
   }
@@ -629,9 +630,9 @@ static SDValue LowerBlockAddress(SDValue Op, SelectionDAG &DAG) {
 
   SDLoc DL(Op);
   SDValue HiTarget = DAG.getTargetBlockAddress(BA->getBlockAddress(), BA->getValueType(0),
-                                               BA->getOffset(), V810MCExpr::VK_V810_HI);
+                                               BA->getOffset(), V810::S_V810_HI);
   SDValue LoTarget = DAG.getTargetBlockAddress(BA->getBlockAddress(), BA->getValueType(0),
-                                               BA->getOffset(), V810MCExpr::VK_V810_LO);
+                                               BA->getOffset(), V810::S_V810_LO);
 
   EVT VT = Op.getValueType();
   SDValue Hi = DAG.getNode(V810ISD::HI, DL, VT, HiTarget);
@@ -643,9 +644,9 @@ static SDValue LowerConstantPool(SDValue Op, SelectionDAG &DAG) {
 
   SDLoc DL(Op);
   SDValue HiTarget = DAG.getTargetConstantPool(CP->getConstVal(), CP->getValueType(0),
-                                               CP->getAlign(), CP->getOffset(), V810MCExpr::VK_V810_HI);
+                                               CP->getAlign(), CP->getOffset(), V810::S_V810_HI);
   SDValue LoTarget = DAG.getTargetConstantPool(CP->getConstVal(), CP->getValueType(0),
-                                               CP->getAlign(), CP->getOffset(), V810MCExpr::VK_V810_LO);
+                                               CP->getAlign(), CP->getOffset(), V810::S_V810_LO);
 
   EVT VT = Op.getValueType();
   SDValue Hi = DAG.getNode(V810ISD::HI, DL, VT, HiTarget);

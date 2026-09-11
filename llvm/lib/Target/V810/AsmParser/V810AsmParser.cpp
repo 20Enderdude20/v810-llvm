@@ -44,7 +44,7 @@ class V810AsmParser : public MCTargetAsmParser {
   ParseStatus parseMEMOperand(OperandVector &Operands);
   ParseStatus parseBranchTargetOperand(OperandVector &Operands);
   ParseStatus parseBcondTargetOperand(OperandVector &Operands);
-  ParseStatus parseJumpTargetOperand(OperandVector &Operands, V810MCExpr::VariantKind Kind);
+  ParseStatus parseJumpTargetOperand(OperandVector &Operands, V810MCExpr::Specifier S);
   ParseStatus parseCondOperand(OperandVector &Operands);
 
   ParseStatus MatchOperandParserCustomImpl(OperandVector &Operands, StringRef Mnemonic);
@@ -447,16 +447,16 @@ V810AsmParser::parseMEMOperand(OperandVector &Operands) {
 
 ParseStatus
 V810AsmParser::parseBranchTargetOperand(OperandVector &Operands) {
-  return parseJumpTargetOperand(Operands, V810MCExpr::VK_V810_26_PCREL);
+  return parseJumpTargetOperand(Operands, V810::S_V810_26_PCREL);
 }
 
 ParseStatus
 V810AsmParser::parseBcondTargetOperand(OperandVector &Operands) {
-  return parseJumpTargetOperand(Operands, V810MCExpr::VK_V810_9_PCREL);
+  return parseJumpTargetOperand(Operands, V810::S_V810_9_PCREL);
 }
 
 ParseStatus
-V810AsmParser::parseJumpTargetOperand(OperandVector &Operands, V810MCExpr::VariantKind Kind) {
+V810AsmParser::parseJumpTargetOperand(OperandVector &Operands, V810MCExpr::Specifier Spec) {
   SMLoc S = getTok().getLoc();
   SMLoc E = getTok().getEndLoc();
 
@@ -468,7 +468,7 @@ V810AsmParser::parseJumpTargetOperand(OperandVector &Operands, V810MCExpr::Varia
   if (DispValue->evaluateAsAbsolute(Value, getStreamer().getAssemblerPtr())) {
     Operands.push_back(V810Operand::CreateImm(DispValue, S, E));
   } else {
-    const V810MCExpr *DispExpr = V810MCExpr::create(Kind, DispValue, getContext());
+    const V810MCExpr *DispExpr = V810MCExpr::create(Spec, DispValue, getContext());
     Operands.push_back(V810Operand::CreateImm(DispExpr, S, E));
   }
   return ParseStatus::Success;
@@ -613,12 +613,12 @@ V810AsmParser::parseV810AsmOperand(std::unique_ptr<V810Operand> &Op) {
   return (Op) ? ParseStatus::Success : ParseStatus::Failure;
 }
 
-static bool evalPseudoOp(V810MCExpr::VariantKind Kind, int64_t &Value) {
-  switch (Kind) {
-  case V810MCExpr::VK_V810_LO:
+static bool evalPseudoOp(V810MCExpr::Specifier S, int64_t &Value) {
+  switch (S) {
+  case V810::S_V810_LO:
     Value = EvalLo(Value);
     return true;
-  case V810MCExpr::VK_V810_HI:
+  case V810::S_V810_HI:
     Value = EvalHi(Value);
     return true;
   default:
@@ -631,12 +631,12 @@ bool V810AsmParser::parsePrimaryExpr(const MCExpr *&Res, SMLoc &EndLoc) {
   if (getTok().isNot(AsmToken::Identifier)) {
     return getParser().parsePrimaryExpr(Res, EndLoc, nullptr);
   }
-  auto Kind = StringSwitch<V810MCExpr::VariantKind>(getTok().getString())
-                  .Case("lo", V810MCExpr::VK_V810_LO)
-                  .Case("hi", V810MCExpr::VK_V810_HI)
-                  .Case("sdaoff", V810MCExpr::VK_V810_SDAOFF)
-                  .Default(V810MCExpr::VK_V810_None);
-  if (Kind == V810MCExpr::VK_V810_None)
+  auto Spec = StringSwitch<V810MCExpr::Specifier>(getTok().getString())
+                  .Case("lo", V810::S_V810_LO)
+                  .Case("hi", V810::S_V810_HI)
+                  .Case("sdaoff", V810::S_V810_SDAOFF)
+                  .Default(V810::S_V810_NONE);
+  if (Spec == V810::S_V810_NONE)
     return getParser().parsePrimaryExpr(Res, EndLoc);
 
   Lex();
@@ -648,13 +648,13 @@ bool V810AsmParser::parsePrimaryExpr(const MCExpr *&Res, SMLoc &EndLoc) {
   // Try constant folding hi and lo
   int64_t Value;
   if (Res->evaluateAsAbsolute(Value, getStreamer().getAssemblerPtr())) {
-    if (evalPseudoOp(Kind, Value)) {
+    if (evalPseudoOp(Spec, Value)) {
       Res = MCConstantExpr::create(Value, getContext());
       return false;
     }
   }
 
-  Res = V810MCExpr::create(Kind, Res, getContext());
+  Res = V810MCExpr::create(Spec, Res, getContext());
   return false;
 }
 

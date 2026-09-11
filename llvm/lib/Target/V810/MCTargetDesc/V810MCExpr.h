@@ -6,51 +6,22 @@
 
 namespace llvm {
 
-class StringRef;
-class V810MCExpr : public MCTargetExpr {
+class V810MCExpr : public MCSpecifierExpr {
 public:
-  enum VariantKind {
-    VK_V810_None,
-    VK_V810_LO,
-    VK_V810_HI,
-    VK_V810_SDAOFF,
-    VK_V810_9_PCREL,
-    VK_V810_26_PCREL
-  };
+  using Specifier = Spec;
 
 private:
-  const VariantKind Kind;
-  const MCExpr *Expr;
-
-  explicit V810MCExpr(VariantKind Kind, const MCExpr *Expr)
-      : Kind(Kind), Expr(Expr) {}
+  explicit V810MCExpr(Specifier S, const MCExpr *Expr)
+    : MCSpecifierExpr(Expr, S, Expr->getLoc()) {}
 
 public:
-  static const V810MCExpr *create(VariantKind Kind, const MCExpr *Expr,
+  static const V810MCExpr *create(Specifier Kind, const MCExpr *Expr,
                                 MCContext &Ctx);
 
-  VariantKind getKind() const { return Kind; }
+  V810::Fixups getFixupKind() const { return getFixupKind(getSpecifier()); }
 
-  const MCExpr *getSubExpr() const { return Expr; }
-
-  V810::Fixups getFixupKind() const { return getFixupKind(Kind); }
-
-  void printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const override;
-  bool evaluateAsRelocatableImpl(MCValue &Res,
-                                 const MCAssembler *Asm) const override;
-  void visitUsedExpr(MCStreamer &Streamer) const override;
-  MCFragment *findAssociatedFragment() const override {
-    return getSubExpr()->findAssociatedFragment();
-  }
-
-  static bool classof(const MCExpr *E) {
-    return E->getKind() == MCExpr::Target;
-  }
-
-  static bool classof(const V810MCExpr *) { return true; }
-
-  static bool printVariantKind(raw_ostream &OS, VariantKind Kind);
-  static V810::Fixups getFixupKind(VariantKind Kind);
+  static bool printSpecifier(raw_ostream &OS, Specifier S);
+  static V810::Fixups getFixupKind(Specifier S);
 };
 
 } // end namespace llvm
