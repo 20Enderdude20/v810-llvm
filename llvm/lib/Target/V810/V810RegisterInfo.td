@@ -55,8 +55,8 @@ def SR16 : V810Reg<16, "sr16", ["dpc"]>, DwarfRegNum<[40]>;
 def SR17 : V810Reg<17, "sr17", ["dpsw"]>, DwarfRegNum<[41]>;
 def SR24 : V810Reg<24, "sr24", ["chcw"]>, DwarfRegNum<[42]>;
 def SR25 : V810Reg<25, "sr25", ["adtre"]>, DwarfRegNum<[43]>;
-def SR29 : V810Reg<31, "sr29">, DwarfRegNum<[44]>;
-def SR30 : V810Reg<31, "sr30">, DwarfRegNum<[45]>;
+def SR29 : V810Reg<29, "sr29">, DwarfRegNum<[44]>;
+def SR30 : V810Reg<30, "sr30">, DwarfRegNum<[45]>;
 def SR31 : V810Reg<31, "sr31", ["hccw"]>, DwarfRegNum<[46]>;
 
 
@@ -65,7 +65,7 @@ def SR31 : V810Reg<31, "sr31", ["hccw"]>, DwarfRegNum<[46]>;
     (add (sequence "SR%u", 0, 7),
         (sequence "SR%u", 16, 17),
         (sequence "SR%u", 24, 25),
-        SR31)> {
+        (sequence "SR%u", 29, 31))> {
     let CopyCost = -1;
     let isAllocatable = false;
         }

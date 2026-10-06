@@ -365,15 +365,13 @@ bool V810AsmParser::parseInstruction(ParseInstructionInfo &Info,
 
   // read first operand  
   if (!parseOperand(Operands, Name).isSuccess()) {
-    SMLoc Loc = getLexer().getLoc();
-    return Error(Loc, "unexpected token");
+    return true;
   }
 
   // read other operands
   while (parseOptionalToken(AsmToken::Comma)) {
     if (!parseOperand(Operands, Name).isSuccess()) {
-      SMLoc Loc = getLexer().getLoc();
-      return Error(Loc, "unexpected token");
+      return true;
     }
   }
 
@@ -514,6 +512,7 @@ V810AsmParser::parseCondOperand(OperandVector &Operands) {
 ParseStatus
 V810AsmParser::MatchOperandParserCustomImpl(OperandVector &Operands, StringRef Mnemonic) {
   SMLoc Start = getTok().getLoc();
+  SMLoc End = getTok().getEndLoc();
 
   if (Mnemonic == "jmp" && Operands.size() == 1) {
     // for some reason, JMP's target is enclosed in brackets
@@ -536,21 +535,23 @@ V810AsmParser::MatchOperandParserCustomImpl(OperandVector &Operands, StringRef M
     // (don't handle this in tryParseRegister because in general, we should not treat integers as registers)
 
     std::string RegName;
+    MCRegister RegNo;
     if (getTok().is(AsmToken::Integer)) {
       RegName = "sr" + getTok().getString().lower();
-    } else {
-      RegName = getTok().getString().lower();
-    }
-
-    MCRegister RegNo = MatchRegisterName(RegName);
-    if (!RegNo) {
-      RegNo = MatchRegisterAltName(RegName);
+      RegNo = MatchRegisterName(RegName);
       if (!RegNo) {
+        Error(Start, "unrecognized register " + RegName);
         return ParseStatus::Failure;
       }
+      Lex(); // om nom nom the end
+    } else {
+      RegName = getTok().getString().lower();
+      ParseStatus Status = tryParseRegister(RegNo, Start, End);
+      if (!Status.isSuccess()) {
+        Error(Start, "unrecognized register " + RegName);
+        return Status;
+      }
     }
-    SMLoc End = getTok().getEndLoc();
-    Lex();
     Operands.push_back(V810Operand::CreateReg(RegNo, Start, End));
     return ParseStatus::Success;
   }
@@ -569,8 +570,11 @@ V810AsmParser::parseOperand(OperandVector &Operands, StringRef Mnemonic) {
 
   std::unique_ptr<V810Operand> Op;
   ResTy = parseV810AsmOperand(Op);
-  if (!ResTy.isSuccess() || !Op)
+  if (!ResTy.isSuccess() || !Op) {
+    SMLoc Loc = getLexer().getLoc();
+    return Error(Loc, "unexpected token");
     return ParseStatus::Failure;
+  }
   
   Operands.push_back(std::move(Op));
 
