@@ -59,6 +59,7 @@ V810RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
     Reserved.set(V810::R5); // text pointer
   }
   Reserved.set(V810::R31); // return address
+  Reserved.set(V810::SR5); // fixes some liveness checks
   return Reserved;
 }
 

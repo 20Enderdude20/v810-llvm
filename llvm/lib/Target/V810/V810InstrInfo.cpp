@@ -439,6 +439,7 @@ bool V810InstrInfo::optimizeCompareInstr(MachineInstr &MI, Register SrcReg,
 
   // Finally, we're sure that this cmp is unnecessary.
   MI.eraseFromParent();
+  SrcRegDef->clearRegisterDeads(V810::SR5);
   return true;
 }
 
